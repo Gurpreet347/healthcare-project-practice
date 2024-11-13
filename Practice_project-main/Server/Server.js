@@ -1,6 +1,5 @@
 require('dotenv').config();
 const multer = require('multer');
-const upload = multer({dest: 'uploads/'}) // upload folder
 const express = require("express");
 const connectDb = require("./config/dbConnection");
 const errorHandler = require("./middlewares/errorHandler");
@@ -17,8 +16,6 @@ const PORT = process.env.PORT || 3000;
 // Set up Handlebars as the view engine
 app.set('view engine', 'hbs');
 app.set('views', path.join(__dirname, 'views')); // Ensure this points to the right directory
-
-
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true })); // For parsing application/x-www-form-urlencoded
@@ -40,7 +37,7 @@ app.get("/home", (req, res) => {
     });
 });
 
-// All users route (Assuming 'users' is defined somewhere)
+// All users route
 app.get("/alluser", (req, res) => {
     const users = []; // Replace with actual users array
     res.render("alluser", {
@@ -49,8 +46,8 @@ app.get("/alluser", (req, res) => {
 });
 
 // User routes
-app.use("/api/register", require("./routes/userRoutes")); // Registration route
-app.use("/api/login", require("./routes/userRoutes")); // Login route
+// app.use("/api/register", require("./routes/userRoutes")); // Registration route
+app.use("/api", require("./routes/userRoutes")); // Login route
 
 // Error handling middleware
 app.use(errorHandler); // Use your error handler middleware
@@ -65,20 +62,38 @@ const storage = multer.diskStorage({
         cb(null, file.fieldname + '-' + uniqueSuffix);
     }
 });
-app.post("/profile",upload.single('avatar'),function(req,res,next){
-    console.log(req.body)
 
-    console.log(req.file)
+// Initialize 'upload' variable with the correct configuration
+const upload = multer({ storage: storage });
 
-    return res.redirect("/home")
-})
-
-// Initialize 'upload' variable
-// const upload = multer({ storage: storage });
-
-// Example upload route
+// Upload route for single file upload
 app.post('/upload', upload.single('myFile'), (req, res) => {
+    console.log(req.file); // Log the uploaded file details
     res.send('File uploaded successfully!');
+});
+
+// Profile route for avatar upload
+app.post("/profile", upload.single('avatar'), async(req, res, next) {
+    console.log(req.body); // Log form fields
+    console.log(req.file); // Log file information
+    return res.redirect("/home");
+    
+});
+
+app.get("/home", async (req, res) => {
+    try {
+        // Fetch the latest profile from the database
+        const profile = await Upload.findOne().sort({ _id: -1 }); // This retrieves the latest profile
+
+        // Render the home page with the profile data
+        res.render("home", {
+            username: profile ? profile.username : "No Profile Found",
+            avatar: profile ? profile.avatar : null
+        });
+    } catch (error) {
+        console.error("Error fetching profile:", error);
+        res.status(500).send("Error fetching profile data.");
+    }
 });
 
 // Start the server

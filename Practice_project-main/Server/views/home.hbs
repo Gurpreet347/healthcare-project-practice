@@ -6,14 +6,22 @@
     <title>Document</title>
 </head>
 <body>
-    <div>
-        <form action="/profile" method="post" encrypte="multipart/form-data">
-        <input type="file" name="avatar"/>
-        <button type="submit">Submit</button>
-        </form>
-        
-
-    </div>
+    {{!-- {{> header }} 
+    <br>
+    HOME --}}
     
+    <form action="/profile" method="post" enctype="multipart/form-data">
+  <input type="file" name="avatar" />
+  <input type="submit" value="Upload">
+</form>
+<h1>Welcome, {{username}}</h1>
+
+    {{#if avatar}}
+        <img src="/{{avatar}}" alt="Profile Avatar" width="150" height="150">
+    {{else}}
+        <p>No profile picture available.</p>
+    {{/if}}
+    </div>
+    </div>
 </body>
 </html>
